@@ -3,8 +3,8 @@
 #+title:Introduction to NodeJS
 #+subtitle:Microsoft DEV283x
 #+subtitle: {{{version}}} {{{date}}}
-#+date:2019-06-10 14:19
-#+macro:version Version 0.0.2
+#+date:2019-06-24 16:21
+#+macro:version Version 0.0.3
 
 {{{version}}} {{{date}}}
 
@@ -55,7 +55,7 @@ Here is a detailed overview of the course:
 - 1. Node Core Overview
 - 2. Installation and Recommended Tool Chain
 - 3. Launching Node, Globals and Process
-- 4. Node Modules with require and modules.exports
+- 4. Node Modules with ~require~ and ~modules.exports~
 - 5. Core modules
 - 6. Understanding event emitters
 - 7. HTTP client with core http
@@ -173,6 +173,310 @@ Adhering to SPA and REST API architectures for your web applications will give
 you the flexibility to leverage your servers for other clients (mobile, IoT,
 public) and will allow you to change front-end clients easily because of the
 loose coupling provided by the API.
+
+* Module 1---Node Core
+** Node Core Overview
+This module will build a solid foundation of Node development by teaching the
+following topics:
+
+- Installation and Recommended Tool Chain
+  1. [[*Installation and Recommended Tool Chain][Installation and recommended tool chain]]
+
+  2. [[*Before We Start][Before we start]]
+
+- Launching Node, Global and Process
+  1. [[*Launching Node---Node.js Console REPL][Node REPL]]
+
+  2. Launching Node code
+
+  3. Node Globals
+
+  4. Node Process Information
+
+- Node Modules with ~require~ and ~module.exports~
+  1. Node Modules with ~require~ and ~module.exports~
+
+  2. ~require~ Usage Patterns
+
+  3. ~require~ Caching Mechanism
+
+  4. Node Module Export Patterns
+
+- Core Modules
+  1. Core Modules
+
+  2. ~fs~ Module
+
+  3. ~path~ Module
+
+- Understanding Event Emitters
+  1. Understanding Node Event Emitters
+
+  2. Modular Events
+
+- HTTP Client with Core http
+  1. Implementing an HTTP client with core http module
+
+  2. Implementing an HTTP client with JSON parsing
+
+  3. Implementing an HTTP client with POST requests
+
+- HTTP Server with Core http
+  1. Implementing an HTTP server
+
+  2. Understanding server request
+
+  3. Understanding server response
+
+- ~npm~ Basics
+  1. Working with ~npm~ and ~npm~ basics
+
+  2. Understanding ~package.json~
+
+  3. Configuring ~npm~
+** Installation and Recommended Tool Chain
+#+cindex:installation
+#+cindex:tool chain
+#+cindex:npm
+In this lesson, we will go over the set up for Node, npm and all the tools you
+will need to be productive.
+*** Node and ~npm~ Installation
+#+cindex:installer
+#+cindex:node, installation
+#+cindex:installation, Node
+#+cindex:npm, install with Node
+#+cindex:installation, npm
+Go to https://nodejs.org/en/download and download a one-click installer for
+your OS by clicking on the Install button.
+
+When choosing a Node installer, don’t choose binaries or source code unless you
+know what to do with them or your OS is not present there (i.e., not Windows or
+Mac).
+
+{{{heading(npm)}}}
+
+The installers come with ~npm~ (Node package manager)---an important tool for
+managing dependencies.  Because ~npm~ comes with Node, there's no need to
+install ~npm~ separately.
+
+*** MongoDB Installation
+#+cindex:MongoDB, installation
+To install MongoDB go to https://www.mongodb.com/download-center and choose
+your version according to the OS.  macOS users who have Homebrew, can install
+MongoBD using Homebrew by following the instructions at
+http://docs.mongodb.org/master/tutorial/install-mongodb-on-os-x.
+
+{{{heading(Data Path)}}}
+
+#+cindex:MongoDB, configuration
+#+cindex:configuration, MongoDB
+Before you run the MongoDB server for the first time, you'll need to configure
+the folder in which MongoDB stores data.  By default it's ~/data/db~.  To
+create this folder, execute this Terminal / CLI command:
+
+: mkdir -p /data/db
+
+Set permission/ownership with chown:
+
+: sudo chown mongodb:mongodb
+
+The command to start the MongoDB server is ~mongod~.
+
+Alternatively, you can specify a different folder with:
+
+: mongod --dbpath <path to data directory>
+*** Configuring NPM
+#+cindex:npm, configuration
+#+cindex:configuration, npm
+You will need to do this if you get a permission error when you try to install
+~npm~ modules.  If you don't have permission errors, then skip this
+configuration.  You can come back to it and configure later.
+
+Locate the path to ~npm~'s directory.  It might differ depending on the
+OS.  Execute the command below to find your path:
+
+#+cindex:npm prefix
+: npm config get prefix
+
+For many POSIX systems, this will be ~/usr/local~.
+
+*DANGER*: If the path is just ~/usr~, change the default folder to a new one as
+described in the ~npm~ documentation.
+
+Change the owner of ~npm~'s directories to the name of the current user (your
+username!):
+
+: sudo chown -R $(whoami) $(npm config get prefix)/{lib/node_modules,bin,share}
+
+This changes the permissions of the sub-folders used by ~npm~ and some other
+tools (~lib/node_modules~, ~bin~, and ~share~).
+*** Before We Start
+#+cindex:node version
+Let's check that you have everything ready to get up and running with the
+exercises and code presented in this course.  Open your Terminal app or Command
+Prompt and type the following commands to check for the presence and versions
+of the required platforms, tools and libraries.
+
+{{{heading(Node version check)}}}
+
+Node must be v8 or higher.  Check it by running:
+
+#+name:node-version-check
+#+begin_src sh :results output :exports results
+node --version
+#+end_src
+
+#+RESULTS: node-version-check
+: v12.4.0
+
+{{{heading(Execute Node statement)}}}
+
+#+cindex:node, execute
+You should be able to execute Node. You can use ~-e~ to quickly run Node code,
+for example:
+
+#+name:node-execute-check
+#+begin_src sh :results output :exports results
+node -e 'console.log(`My node version is ${process.versions.node}`)'
+#+end_src
+
+#+RESULTS: node-execute-check
+: My node version is 12.4.0
+
+{{{heading(npm version check)}}}
+
+#+cindex:npm version
+~npm~ must be v5 or higher.  Check it by running:
+
+#+name:npm-version-check
+#+begin_src sh :results output :exports results
+npm --version
+yarn --version
+#+end_src
+
+#+RESULTS: npm-version-check
+: 6.9.0
+: 1.17.0
+
+{{{heading(npm installation check)}}}
+
+#+cindex:npm global installation
+#+cindex:yarn global intallation
+Let's test ~npm~ installation.  Go ahead and globally install ~node-static~
+which is a useful local development web server:
+
+#+name:npm-global-installation-check
+#+begin_src sh :results output :exports results
+yarn global add node-static
+#+end_src
+
+#+RESULTS: npm-global-installation-check
+: yarn global v1.17.0
+: [1/4] Resolving packages...
+: [2/4] Fetching packages...
+: [3/4] Linking dependencies...
+: [4/4] Building fresh packages...
+: success Installed "node-static@0.7.11" with binaries:
+:       - static
+: Done in 8.20s.
+
+You should not see any errors or need sudo if you followed instructions on how
+to change ownership of npm in the previous unit.  If you see permission errors,
+then please go back to configuring ~npm~ and change the ownership of ~npm~'s
+folder.
+
+{{{heading(node-static version check)}}}
+
+When ~node-static~ is done installing, then you should be able to check
+~static~ (command for node-static) with (I'm using 0.7.9):
+
+#+name:node-static-version-check
+#+begin_src sh :results output :exports results
+static --version
+#+end_src
+
+#+RESULTS: node-static-version-check
+: node-static 0.7.9
+
+{{{heading(MongoDB version check)}}}
+
+MongoDB must be v3 or higher:
+
+#+name:mongodb-version-check
+#+begin_src sh :results output :exports results
+mongod --version
+#+end_src
+
+#+RESULTS: mongodb-version-check
+: db version v4.0.10
+: git version: c389e7f69f637f7a1ac3cc9fae843b635f20b766
+: allocator: system
+: modules: none
+: build environment:
+:     distarch: x86_64
+:     target_arch: x86_64
+** Launching Node---Global---Process
+*** Launching Node---Node.js Console REPL
+#+cindex:REPL
+#+cindex:Node.js console
+Like most platforms/languages (e.g., Java, Python, Ruby, and PHP), Node.js
+comes with a virtual environment called Read-Evaluate-Print Loop (REPL).  Using
+REPL (a.k.a. Node console), we can execute pretty much any Node.js/JavaScript
+code.  It is even possible to include modules and work with the file system!
+
+To start Node REPL, run the following command in your terminal:
+
+: $ node
+
+The prompt should change from =$= to =>= (or something else, depending on your
+shell).  From this prompt, we can run any JavaScript/Node.js (akin to the Chrome
+Developer Tools console) we want.  For example:
+
+#+begin_example
+> 1+1
+> "Hello"+" "+"World"
+> a=1;b=2;a+b
+> 17+29/2*7
+> f = function(x) {return x*2}
+> f(b)
+#+end_example
+
+REPL prints the results of the expressions such as ~1+1~ or ~f(b)~:
+
+REPL is one of the ways how developers can run Node code.  The benefit of REPL
+is that you immediately see the results of a particular expression or piece of
+code.  I often use REPL to validate Regular Expressions or string methods.  The
+downside of REPL is that the code is not saved which means it's harder to
+replicate the execution.  Thus, in the next lesson we'll learn how to launch
+Node code from a saved file.
+*** Launching Node---Node.js Scripts
+Node is an interpreted language and environment, not a compiled one.  There are
+three main way to launch Node code:
+
+ 1. REPL (already covered in the previous lesson)
+ 2. Eval option
+ 3. Launching Node code from a file
+
+**** Eval Option
+#+cindex:eval @option{-e}
+If all we need is a quick set of statements, there’s a eval ~-e~ option that
+allows us to run inline JavaScript/Node.js.  For example, to print the current
+date, run this in your Terminal / Command Prompt:
+
+#+begin_src sh :results output :exports results
+node -e "console.log(new Date())"
+#+end_src
+
+#+RESULTS:
+: 2019-06-24T23:20:25.181Z
+
+**** Launching Node Code from a File
+
+** Summary of Module 1: Node Core
+
+** Module 1 Tutorial Lab: Node Web Crawler
+
+** Module 1 Assignment Lab: CSV to JSON Converter
 
 * Concept Index
 :PROPERTIES:
